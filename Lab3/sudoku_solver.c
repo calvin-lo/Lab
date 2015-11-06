@@ -4,7 +4,9 @@
 #include <unistd.h>
 #define BUFFER_LEN 256
 
-int check(int puzzle[][9], int row, int col, int num)
+int puzzle[9][9] = {};
+
+int check(int row, int col, int num)
 {
     int rowStart = (row/3) * 3;
     int colStart = (col/3) * 3;
@@ -22,28 +24,27 @@ int check(int puzzle[][9], int row, int col, int num)
     return 1;
 }
 
-int solver(int puzzle[][9], int row, int col)
+int solver(int row, int col)
 {
-    int i;
     if(row < 9 && col < 9)
     {
         if(puzzle[row][col] != 0)
         {
             if((col+1)<9) 
-                return solver(puzzle, row, col+1);
+                return solver(row, col+1);
             else if((row+1)<9) 
-                return solver(puzzle, row+1, 0);
+                return solver(row+1, 0);
             else 
                 return 1;
         }
         else
         {
-            for(i=0; i<9; ++i)
+            for(int i = 0; i < 9; i++)
             {
-                if(check(puzzle, row, col, i+1))
+                if(check(row, col, i + 1))
                 {
                     puzzle[row][col] = i + 1;
-                    if(solver(puzzle, row, col)) 
+                    if(solver(row, col)) 
                         return 1;
                     else 
                         puzzle[row][col] = 0;
@@ -55,32 +56,27 @@ int solver(int puzzle[][9], int row, int col)
     else return 1;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-    int i, j;
-    char f[BUFFER_LEN] = {0};
-    int puzzle[9][9] = {};
-    if (argc == 2)
-        strcpy(f, argv[1]);
 
-    FILE* rf = fopen(f, "r");
+    FILE* rf = fopen("puzzle.txt", "r");
     //fscanf(rf,"%d", &k);
     while (!feof(rf))
     {
-        for (int a = 0 ; a < 9 ; a++)
+        for (int i = 0 ; i < 9 ; i++)
         {
-            for (int b = 0; b < 9; b++)
-                fscanf(rf, "%d", &puzzle[a][b]);
+            for (int j = 0; j < 9; j++)
+                fscanf(rf, "%d", &puzzle[i][j]);
         }
     }
     fclose(rf);
 
     FILE* wf = fopen("solution.txt", "w");
-    if(solver(puzzle, 0, 0))
+    if(solver(0, 0) == 1)
     {
-        for(i=0; i<9; ++i)
+        for(int i = 0; i < 9; i++)
         {
-            for(j=0; j<9; ++j) 
+            for(int j = 0; j < 9; j++) 
                 fprintf(wf,"%d ", puzzle[i][j]);
             fprintf(wf,"\n");
         }
