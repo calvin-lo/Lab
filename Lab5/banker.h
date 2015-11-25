@@ -49,4 +49,8 @@ extern bool isSafe();
 
 extern void printRequest(int request[]);
 
+extern void print(int n_customer);
+
+
+
 #endif /* BANKER_H_ */

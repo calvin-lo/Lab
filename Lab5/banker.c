@@ -26,13 +26,17 @@ pthread_mutex_t mutex;
 void *thread_request_res(void *i_data)
 {
 	t_data* data = (t_data*) i_data;
+
 	pthread_mutex_lock(&mutex);
-	printf("Responding to customer %d\n", data->n_customer);
+    printf("------------------------------------------------\n");
+	printf("Responding to customer %d\n", data->n_customer + 1);
+    print(data->n_customer);
 	if (isSafe())  {
         printf("The system is in a safe state.\n");
 		if (request_res(data->n_customer, data->request) == true) {
 			printf("Accpeted. The resources are granted.\n");
-            exit(0); // test first accpeted resources
+            print(data->n_customer);
+            //exit(0); // test first accpeted resources
 		} else {
 			printf("Denied. The resources are not granted.\n");
 			sleep(rand() % 2);
@@ -63,7 +67,7 @@ void *thread_request_res(void *i_data)
             printf("\n");
         }
     }
-    printf("------------------------------------------------\n");
+    printf("------------------------------------------------\n\n");
 	pthread_mutex_unlock(&mutex);
 	
 	return NULL;
@@ -92,19 +96,6 @@ bool request_res(int n_customer, int request[])
 	}
 
     printRequest(request);
-
-    printf("Alloc: ");
-    for (int i = 0; i < NUM_RESOURCES; i++)
-        printf("%d ", b.allocation[n_customer][i]);
-    printf("\n");
-    printf("Need: ");
-    for (int i = 0; i < NUM_RESOURCES; i++)
-        printf("%d ", b.need[n_customer][i]);
-    printf("\n");
-    printf("Avail: ");
-    for (int i = 0; i < NUM_RESOURCES; i++)
-        printf("%d ", b.available[i]);
-    printf("\n");
 
 	return true;;
 }
@@ -168,6 +159,23 @@ bool isSafe()
 
 }
 
+void print(int n_customer)
+{
+    printf("(Max: ");
+    for (int i = 0; i < NUM_RESOURCES; i++)
+        printf("%d ", b.maximum[n_customer][i]);
+    printf(" | Alloc: ");
+    for (int i = 0; i < NUM_RESOURCES; i++)
+        printf("%d ", b.allocation[n_customer][i]);
+    printf(" | Need: ");
+    for (int i = 0; i < NUM_RESOURCES; i++)
+        printf("%d ", b.need[n_customer][i]);
+    printf("| Avail: ");
+    for (int i = 0; i < NUM_RESOURCES; i++)
+        printf("%d ", b.available[i]);
+    printf(")\n");
+}
+
 int main(int argc, char *argv[])
 {
     // ==================== YOUR CODE HERE ==================== //
@@ -197,39 +205,43 @@ int main(int argc, char *argv[])
     // Initialize the pthreads, locks, mutexes, etc.
     pthread_mutex_init(&mutex, NULL);
     pthread_t threads[NUM_CUSTOMERS];
+    t_data data[NUM_CUSTOMERS];
+    data[0].n_customer = 0;
+    data[1].n_customer = 1;
+    data[2].n_customer = 2;
+    data[3].n_customer = 3;
+    data[4].n_customer = 4;
 
     // Run the threads and continually loop
    	while (true)  {
-   		for (int i = 0 ; i < NUM_CUSTOMERS; i++)  {
-   		int request[NUM_RESOURCES];
-        int release[NUM_RESOURCES];
-   		
-        bool request_check = false;
-        while (request_check == false) {
-            for (int i = 0; i < NUM_RESOURCES; i++)
-                request[i] = rand() % 10;
-            
-            // check request resource is all 0s.
-            for (int i = 0; i < NUM_RESOURCES; i++)  {
-                if (request[i] != 0)
-                    request_check = true;
+   		for (int n = 0 ; n < NUM_CUSTOMERS; n++)  {
+       		int request[NUM_RESOURCES];
+            int release[NUM_RESOURCES];
+       		
+            bool request_check = false;
+            while (request_check == false) {
+                for (int i = 0; i < NUM_RESOURCES; i++)
+                    request[i] = rand() % 10;
+                
+                // check request resource is all 0s.
+                for (int i = 0; i < NUM_RESOURCES; i++)  {
+                    if (request[i] != 0)
+                        request_check = true;
+                }
             }
-        }
 
-        for (int i = 0; i < NUM_RESOURCES; i++)
-                release[i] = rand() % 10;
-        t_data data;
-        data.n_customer = i;
-        memcpy(data.request, request, sizeof(request));
-        memcpy(data.release, release, sizeof(release));
-		pthread_create(&threads[i], 0, thread_request_res, &data);
+            for (int i = 0; i < NUM_RESOURCES; i++)
+                    release[i] = rand() % 10;
+            memcpy(data[n].request, request, sizeof(request));
+            memcpy(data[n].release, release, sizeof(release));
+
+    		pthread_create(&threads[n], 0, thread_request_res, &data[n]);
 		}
    	}
 
     for (int i = 0; i < NUM_CUSTOMERS; i++)  {
     	pthread_join(threads[i], 0);
     }
-
     pthread_mutex_destroy(&mutex);
 
     // If your program hangs you may have a deadlock, otherwise you *may* have
